@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 
+#include "songlist.c"
+
 //g++ LinkedListPlayer.c -lwinmm
 
 typedef struct SongStruct{
@@ -13,7 +15,7 @@ typedef struct SongStruct{
 
 int main(){
     Song birthdayKid;
-    birthdayKid.path="C:\\projects\\soundthing\\UnderTheTree\\BirthdayKid.wav";
+    birthdayKid.path=path1 //from songlist.c
     PlaySound(TEXT(birthdayKid.path),NULL,SND_ASYNC);
     system("PAUSE");
     return 0;
