@@ -1,9 +1,9 @@
-#include<dirent.h>
+#include<dirent.h> //Opening directory and files
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 
-#include <unistd.h>
+#include<unistd.h>
 #include<fcntl.h>
 #include<unistd.h>
 #include<pulse/simple.h>
@@ -27,12 +27,12 @@ char* getext(char filename[]){
         return(ext + 1);
 }
 Song create(char * path){
-    Song snode;
-    snode = (Song)malloc(sizeof(struct SongStruct));
-    snode->path=path;
-    snode->next=NULL;
-    printf("Added: %s\n",snode->path);
-    return snode;
+    Song newnode;
+    newnode = (Song)malloc(sizeof(struct SongStruct));
+    newnode->path=path;
+    newnode->next=NULL;
+    printf("Added: %s\n",newnode->path);
+    return newnode;
 }
 Song insertfront(char *path){
     Song temp;
@@ -46,17 +46,17 @@ Song insertfront(char *path){
 Song deletefront(){
     Song temp;
     if(start == NULL){
-        printf("\nLinked list is empty");
+        printf("\nEmpty Playlist");
         return NULL;
     }
     if(start->next == NULL){
-        printf("\nThe Student SongStruct with path:%s is deleted ",start->path);
+        printf("\nThe Song with path:%s is deleted ",start->path);
         free(start);
         return NULL;
     }
     temp = start;
     start = start->next;
-    printf("\nThe Student SongStruct with path:%s is deleted",temp->path);
+    printf("\nThe Song with path:%s is deleted",temp->path);
     free(temp);
     return start;
 }
@@ -80,16 +80,31 @@ void setDir(){
 }
 void addToPlaylist(){
     setDir();
-    DIR *d;
-    struct dirent *dir;
+    DIR *d; //dirent.h
+    struct dirent *dir; //dirent.h
     char *path=(char*)malloc(sizeof(dirpath));
-    d = opendir(dirpath);
-    if (d){
+    d=opendir(dirpath);
+    if (d){ //folder has stuff
         while ((dir = readdir(d)) != NULL){
             char *ext=getext(dir->d_name);
             if(strcmp(ext,"wav")==0){
-                char *fpath=(char*)malloc(sizeof(dirpath)+sizeof(path));
+                char *fpath=(char*)malloc(sizeof(dirpath)+sizeof(path)); //stores enough characters to hold path of file
                 strcpy(fpath,dirpath);
+                /*
+                if we directly used strcat(dirpath,dir->d_name),
+
+                dirpath=songs
+                path=songs/song1.wav
+
+                dirpath then becomes songs/song1.wav
+                */
+
+                /*
+                fpath=songs
+                dirpath=songs
+
+                fpath=songs/song2.wav
+                */
                 strcat(fpath,dir->d_name);
                 start=insertend(fpath);
             }
@@ -137,7 +152,6 @@ void display(){
         num++;
     }
 }
-
 void PlaySound(Song song){
     char * file_content[1000000]; //45 secs
     int myfd=open(song->path,O_RDONLY);
@@ -145,22 +159,21 @@ void PlaySound(Song song){
     close(myfd);
 
     // pa_simple defined in pulse simple file
-    pa_simple *simple=NULL;
-    pa_sample_spec ss;
+    pa_simple *simple=NULL; //stores song currently playing
+    pa_sample_spec ss; //stores data about song
+
     //following data can be recieved by executing
     //file filename.wav
-    ss.format=PA_SAMPLE_S16LE; //16 bit little endian
+    ss.format=PA_SAMPLE_S16LE; //16 bit little endian //const defined in pulse header file
     ss.rate=44100; //hz
     ss.channels=2; //stereo
     simple=pa_simple_new(NULL,"Audio Playback",PA_STREAM_PLAYBACK,NULL,"playback",&ss,NULL,NULL,NULL);
     pa_simple_write(simple,file_content,sizeof(file_content),NULL);
-    pa_simple_drain(simple,NULL);
-    pa_simple_free(simple);
+    pa_simple_drain(simple,NULL); //plays song
+    pa_simple_free(simple); //frees memory
 }
-
 void Play(){
     Song cur;
-    int num=1;
     if(start == NULL){
         printf("\nEmpty Playlist\n");
         return;
@@ -169,26 +182,46 @@ void Play(){
     while(cur!=NULL){
         PlaySound(cur);
         cur = cur->next;
-        num++;
     }
+    printf("\nPlaylist Ended");
 }
-
-void editmenu(){
+void edit(){
+    int op;
+    char * path;
     while(1){
-        printf("\n====Edit Playlist====");
-        printf("\n1. Add Song At End");
+        printf("\n====EDIT====");
+        printf("\n1. Add at End\n2. Add at Start\n3. Delete at End\n4. Delete at Start\n5. View Playlist6. Back");
+        printf("\nEnter: ");
+        scanf("%d",&op);
+        switch (op)
+        {
+        case 1:
+            printf("\nEnter Path: ");
+            scanf("%s",path);
+            start=insertend(path);
+            break;
+        case 2:
+            printf("\nEnter Path: ");
+            scanf("%s",path);
+            start=insertfront(path);
+            break;
+        case 3:
+            start=deleteend();
+            break;
+        case 4:
+            start=deletefront();
+            break;
+        default:
+            return;
+        }
     }
 }
-
-int menu(){
+void menu(){
     int ch,i,n;
     while(1){
-        printf("\n~~~Menu~~~");
-        printf("\n1: Create Playlist");
-        printf("\n2: View Playlist");
-        printf("\n3: Delete at end");
-        printf("\n4: Play");
-        printf("\n5: Exit\n");
+        printf("\n====Menu====");
+        printf("\n1: Create Playlist\n2: View Playlist\n3: Edit Playlist");
+        printf("\n4: Play\n5: Exit\n");
         printf("\nEnter your choice:");
         scanf("%d",&ch);
         switch(ch){
@@ -199,18 +232,18 @@ int menu(){
                 display();
                 break;
             case 3:
-                start = deleteend();
+                edit();
                 break;
             case 4:
                 Play();
                 break;
             case 5:
-                return 0;
+                return;
             default: printf("\nPlease enter the valid choice");
         }
     }
 }
-
 int main(){
-    return main();
+    menu();
+    return 0;
 }
