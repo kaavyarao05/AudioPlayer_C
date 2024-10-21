@@ -31,7 +31,7 @@ Song create(char * path){
     snode = (Song)malloc(sizeof(struct SongStruct));
     snode->path=path;
     snode->next=NULL;
-    //printf("Added: %s\n",path);
+    printf("Added: %s\n",snode->path);
     return snode;
 }
 Song insertfront(char *path){
@@ -64,7 +64,6 @@ Song insertend(char * path){
     Song cur,temp;
     temp = create(path);
     if(start == NULL){
-        printf("\nStart == NULL (temp): %s",temp->path);
         start=temp;
         return temp;
     }
@@ -89,7 +88,10 @@ void addToPlaylist(){
         while ((dir = readdir(d)) != NULL){
             char *ext=getext(dir->d_name);
             if(strcmp(ext,"wav")==0){
-                start=insertend(dir->d_name);
+                char *fpath=(char*)malloc(sizeof(dirpath)+sizeof(path));
+                strcpy(fpath,dirpath);
+                strcat(fpath,dir->d_name);
+                start=insertend(fpath);
             }
         }
     }
@@ -136,9 +138,9 @@ void display(){
     }
 }
 
-void PlaySound(){
+void PlaySound(Song song){
     char * file_content[1000000]; //45 secs
-    int myfd=open("UnderTheTree/BirthdayKid.wav",O_RDONLY);
+    int myfd=open(song->path,O_RDONLY);
     read(myfd,file_content,sizeof(file_content));
     close(myfd);
 
@@ -163,20 +165,25 @@ void Play(){
         printf("\nEmpty Playlist\n");
         return;
     }
-    printf("\nPlaylist: \n");
     cur = start;
-    while(cur!=NULL){    
-        printf("\n%s",cur->path);
+    while(cur!=NULL){
+        PlaySound(cur);
         cur = cur->next;
         num++;
     }
 }
 
-void menu(){
+void editmenu(){
+    while(1){
+        printf("\n====Edit Playlist====");
+        printf("\n1. Add Song At End");
+    }
+}
+
+int menu(){
     int ch,i,n;
     while(1){
         printf("\n~~~Menu~~~");
-        printf("\nEnter your choice for SLL operation \n");
         printf("\n1: Create Playlist");
         printf("\n2: View Playlist");
         printf("\n3: Delete at end");
@@ -198,13 +205,12 @@ void menu(){
                 Play();
                 break;
             case 5:
-                return;
+                return 0;
             default: printf("\nPlease enter the valid choice");
         }
     }
 }
 
 int main(){
-    menu();
-    return 0;
+    return main();
 }
